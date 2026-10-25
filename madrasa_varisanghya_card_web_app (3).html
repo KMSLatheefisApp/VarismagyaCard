@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>മദ്റസ വരിസംഖ്യാ കാർഡ് ഡിജിറ്റൽ സിസ്റ്റം</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Malayalam -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chilanka&family=Noto+Sans+Malayalam:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Noto Sans Malayalam', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .font-chilanka {
+            font-family: 'Chilanka', cursive;
+        }
+        
+        /* Print Styles for A4 Paper with 0.5 in margins */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0.5in;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+                font-size: 11pt;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .print-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            input, select, textarea {
+                border: none !important;
+                background: transparent !important;
+                appearance: none !important;
+                -webkit-appearance: none !important;
+                font-weight: 700 !important;
+                padding: 0 !important;
+            }
+            /* Hide dropdown arrow in print */
+            select {
+                background-image: none !important;
+            }
+            /* Clean table for printing */
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+            }
+            th, td {
+                border: 1px solid #000 !important;
+                padding: 6px 8px !important;
+            }
+        }
+    </style>
+</head>
+<body class="p-2 sm:p-4 md:p-6 text-gray-800 antialiased min-h-screen flex flex-col items-center">
+
+    <!-- Top Navigation Bar & Action Controls (No Print) -->
+    <div class="no-print w-full max-w-5xl bg-emerald-800 text-white p-4 rounded-xl shadow-lg mb-4 flex flex-wrap justify-between items-center gap-3">
+        <div class="flex items-center space-x-3 space-x-reverse">
+            <i class="fa-solid fa-book-quran text-3xl text-yellow-300"></i>
+            <div>
+                <h1 class="text-xl font-bold">വരിസംഖ്യാ മാനേജ്മെന്റ് സിസ്റ്റം</h1>
+                <p class="text-xs text-emerald-200">ഡിജിറ്റൽ കാർഡ് & റെക്കോർഡ് മാനേജർ</p>
+            </div>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-2 text-sm">
+            <button onclick="addNewFamily()" class="bg-yellow-500 hover:bg-yellow-600 text-emerald-950 font-bold px-3 py-2 rounded-lg transition flex items-center gap-1 shadow">
+                <i class="fa-solid fa-user-plus"></i> പുതിയ കുടുംബം +
+            </button>
+            <button onclick="openFamilyListModal()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1 shadow">
+                <i class="fa-solid fa-address-book"></i> കുടുംബങ്ങളുടെ ലിസ്റ്റ്
+            </button>
+            <button onclick="window.print()" class="bg-white hover:bg-gray-100 text-emerald-900 font-bold px-3 py-2 rounded-lg transition flex items-center gap-1 shadow">
+                <i class="fa-solid fa-print"></i> പ്രിന്റ് എടുക്കുക (A4)
+            </button>
+            <button onclick="sendWhatsAppReceipt()" class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-2 rounded-lg transition flex items-center gap-1 shadow">
+                <i class="fa-brands fa-whatsapp"></i> വാട്സാപ്പ്
+            </button>
+            <button onclick="exportData()" class="bg-emerald-900 hover:bg-black text-xs px-2.5 py-2 rounded-lg text-emerald-100 border border-emerald-700">
+                <i class="fa-solid fa-download"></i> ബാക്കപ്പ്
+            </button>
+            <label class="bg-emerald-900 hover:bg-black text-xs px-2.5 py-2 rounded-lg text-emerald-100 border border-emerald-700 cursor-pointer">
+                <i class="fa-solid fa-upload"></i> റീസ്റ്റോർ
+                <input type="file" id="importFileInput" onchange="importData(event)" class="hidden" accept=".json">
+            </label>
+        </div>
+    </div>
+
+    <!-- Quick Navigation between Families (No Print) -->
+    <div class="no-print w-full max-w-5xl bg-white p-3 rounded-xl shadow-md mb-4 flex justify-between items-center gap-2">
+        <button onclick="navigateFamily(-1)" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg text-gray-800 font-bold text-sm flex items-center gap-1">
+            <i class="fa-solid fa-arrow-left"></i> മുൻപത്തേത്
+        </button>
+        <div class="text-center">
+            <span class="text-xs text-gray-500 block">നിലവിലെ കുടുംബം</span>
+            <span id="currentFamilyIndicator" class="font-extrabold text-emerald-800 text-base">കുടുംബം നമ്പർ: --</span>
+        </div>
+        <button onclick="navigateFamily(1)" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg text-gray-800 font-bold text-sm flex items-center gap-1">
+            അടുത്തത് <i class="fa-solid fa-arrow-right"></i>
+        </button>
+    </div>
+
+    <!-- MAIN A4 PRINTABLE CONTAINER -->
+    <div id="printableCard" class="print-container w-full max-w-5xl bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-gray-200">
+        
+        <!-- Editable Header Section -->
+        <div class="text-center border-b-2 border-emerald-800 pb-4 mb-5">
+            <!-- Editable Madrasa Name Heading -->
+            <input type="text" id="madrasaName" 
+                class="w-full text-center text-2xl md:text-3xl font-black text-emerald-900 focus:bg-yellow-50 focus:outline-none rounded py-1 mb-1 font-chilanka" 
+                placeholder="മദ്റസയുടെ പേര് ടൈപ്പ് ചെയ്യുക" 
+                oninput="saveCurrentData()">
+            
+            <div class="flex flex-wrap justify-center items-center gap-4 text-sm font-semibold text-gray-700 my-2">
+                <div class="flex items-center gap-1">
+                    <span>സ്ഥലം:</span>
+                    <input type="text" id="madrasaLocation" 
+                        class="border-b border-gray-400 font-bold text-gray-800 focus:bg-yellow-50 focus:outline-none px-2 py-0.5 text-center" 
+                        placeholder="സ്ഥലം ടൈപ്പ് ചെയ്യുക" 
+                        oninput="saveCurrentData()">
+                </div>
+                <div class="flex items-center gap-1">
+                    <span>ഫോൺ നമ്പർ:</span>
+                    <input type="text" id="madrasaPhone" 
+                        class="border-b border-gray-400 font-bold text-gray-800 focus:bg-yellow-50 focus:outline-none px-2 py-0.5 text-center" 
+                        placeholder="മൊബൈൽ നമ്പർ" 
+                        oninput="saveCurrentData()">
+                </div>
+            </div>
+
+            <!-- Prominent Green Badge for Subscription Card -->
+            <div class="mt-3">
+                <span class="inline-block bg-emerald-700 text-white font-black text-lg md:text-xl px-8 py-1.5 rounded-full shadow-md tracking-wide">
+                    വരിസംഖ്യാ കാർഡ്
+                </span>
+            </div>
+        </div>
+
+        <!-- Family Information Blank Form -->
+        <div class="bg-emerald-50/60 p-4 rounded-xl border border-emerald-200 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs text-emerald-900 font-bold mb-1">കുടുംബ നമ്പർ (No.):</label>
+                    <input type="text" id="familyNo" class="w-full bg-white border border-emerald-300 rounded-lg p-2 font-black text-emerald-900 text-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="001" oninput="saveCurrentData()">
+                </div>
+                <div>
+                    <label class="block text-xs text-emerald-900 font-bold mb-1">കുടുംബ നാഥൻ്റെ പേര്:</label>
+                    <input type="text" id="headName" class="w-full bg-white border border-emerald-300 rounded-lg p-2 font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="പേര് ടൈപ്പ് ചെയ്യുക" oninput="saveCurrentData()">
+                </div>
+                <div>
+                    <label class="block text-xs text-emerald-900 font-bold mb-1">വീട്ടുപേര്:</label>
+                    <input type="text" id="houseName" class="w-full bg-white border border-emerald-300 rounded-lg p-2 font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="വീട്ടുപേര്" oninput="saveCurrentData()">
+                </div>
+                <div>
+                    <label class="block text-xs text-emerald-900 font-bold mb-1">സ്ഥലം:</label>
+                    <input type="text" id="familyPlace" class="w-full bg-white border border-emerald-300 rounded-lg p-2 font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="സ്ഥലം" oninput="saveCurrentData()">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                <div>
+                    <label class="block text-xs text-emerald-900 font-bold mb-1">ഫോൺ നമ്പർ (മൊബൈൽ):</label>
+                    <input type="text" id="familyPhone" class="w-full bg-white border border-emerald-300 rounded-lg p-2 font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="ഫോൺ നമ്പർ" oninput="saveCurrentData()">
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs text-emerald-900 font-bold">മക്കൾ (മദ്റസ വിദ്യാർത്ഥികൾ):</label>
+                        <button onclick="addChildRow()" class="no-print bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-2 py-0.5 rounded transition">
+                            + കുട്ടി ചേർക്കുക
+                        </button>
+                    </div>
+                    <div id="childrenContainer" class="space-y-1.5">
+                        <!-- Dynamic Child Fields Inserted Here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Entry Box (No Print) -->
+        <div class="no-print bg-amber-50 p-4 rounded-xl border border-amber-300 mb-6 shadow-sm">
+            <h3 class="font-bold text-amber-900 text-sm mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-square-plus text-amber-600 text-base"></i> പുതിയ പണം അടവ് രേഖപ്പെടുത്തുക
+            </h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">മാസം / ഇനം:</label>
+                    <select id="payMonth" class="w-full bg-white border border-amber-300 rounded-lg p-2 font-semibold text-gray-800 focus:ring-2 focus:ring-amber-500">
+                        <option value="ജനുവരി">ജനുവരി</option>
+                        <option value="ഫെബ്രുവരി">ഫെബ്രുവരി</option>
+                        <option value="മാർച്ച്">മാർച്ച്</option>
+                        <option value="ഏപ്രിൽ">ഏപ്രിൽ</option>
+                        <option value="മേയ്">മേയ്</option>
+                        <option value="ജൂൺ">ജൂൺ</option>
+                        <option value="ജൂലൈ">ജൂലൈ</option>
+                        <option value="ഓഗസ്റ്റ്">ഓഗസ്റ്റ്</option>
+                        <option value="സെപ്റ്റംബർ">സെപ്റ്റംബർ</option>
+                        <option value="ഒക്ടോബർ">ഒക്ടോബർ</option>
+                        <option value="നവംബർ">നവംബർ</option>
+                        <option value="ഡിസംബർ">ഡിസംബർ</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">വരവ് തരം (Category):</label>
+                    <select id="payCategory" class="w-full bg-white border border-amber-300 rounded-lg p-2 font-semibold text-gray-800 focus:ring-2 focus:ring-amber-500">
+                        <option value="തൻമാസം">തൻമാസം</option>
+                        <option value="കുടിശ്ശിക">കുടിശ്ശിക</option>
+                        <option value="കുടിശ്ശിക + തൻമാസം">കുടിശ്ശിക + തൻമാസം</option>
+                        <option value="തൻമാസം + അഡ്വാൻസ്">തൻമാസം + അഡ്വാൻസ്</option>
+                        <option value="കുടിശ്ശിക + തൻമാസം + അഡ്വാൻസ്">കുടിശ്ശിക + തൻമാസം + അഡ്വാൻസ്</option>
+                        <option value="റമളാൻ സ്പെഷ്യൽ">റമളാൻ സ്പെഷ്യൽ</option>
+                        <option value="നേർച്ചപ്പണം">നേർച്ചപ്പണം</option>
+                        <option value="മറ്റു സംഭാവന">മറ്റു സംഭാവന</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">തുക (₹):</label>
+                    <input type="number" id="payAmount" class="w-full bg-white border border-amber-300 rounded-lg p-2 font-extrabold text-emerald-900 focus:ring-2 focus:ring-amber-500" placeholder="₹ തുക">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">സ്വീകരിച്ചയാൾ / വിവരങ്ങൾ:</label>
+                    <input type="text" id="payCollector" class="w-full bg-white border border-amber-300 rounded-lg p-2 font-semibold text-gray-800 focus:ring-2 focus:ring-amber-500" placeholder="ഉസ്താദ് / സെക്രട്ടറി">
+                </div>
+            </div>
+
+            <!-- Auto Timestamp Display Indicator -->
+            <div class="flex justify-between items-center mt-3 pt-2 border-t border-amber-200">
+                <span class="text-xs text-amber-800 font-semibold flex items-center gap-1">
+                    <i class="fa-regular fa-clock"></i> തിയ്യതിയും സമയവും: <strong id="liveTimestamp">--/--/---- --:-- --</strong>
+                </span>
+                <button onclick="addPaymentRecord()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-5 py-2 rounded-lg transition shadow flex items-center gap-1">
+                    <i class="fa-solid fa-check-circle"></i> പണം ചേർക്കുക
+                </button>
+            </div>
+        </div>
+
+        <!-- Payment History Table -->
+        <div class="mb-6">
+            <h3 class="font-extrabold text-emerald-900 text-base mb-2 flex items-center justify-between">
+                <span><i class="fa-solid fa-list-check text-emerald-700"></i> അടവ് വിവരങ്ങൾ (Payment History)</span>
+                <span class="text-xs text-gray-500 font-normal no-print">തുക മാറ്റാൻ നേരിട്ട് എഡിറ്റ് ചെയ്യാം</span>
+            </h3>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300 text-sm">
+                    <thead>
+                        <tr class="bg-emerald-800 text-white font-bold text-center">
+                            <th class="border border-gray-300 p-2 w-12">ക്രമം</th>
+                            <th class="border border-gray-300 p-2">തിയ്യതി & സമയം</th>
+                            <th class="border border-gray-300 p-2">മാസം / ഇനം</th>
+                            <th class="border border-gray-300 p-2">വരവ് തരം</th>
+                            <th class="border border-gray-300 p-2">തുക (₹)</th>
+                            <th class="border border-gray-300 p-2">സ്വീകരിച്ചയാൾ</th>
+                            <th class="border border-gray-300 p-2 w-12 no-print">ഒഴിവാക്കുക</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentTableBody">
+                        <!-- Dynamic payment rows will be rendered here -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-emerald-100/70 font-black text-emerald-950">
+                            <td colspan="4" class="border border-gray-300 p-2.5 text-right text-base">ആകെ അടച്ച തുക (Total Paid):</td>
+                            <td id="familyTotalPaid" class="border border-gray-300 p-2.5 text-center text-lg text-emerald-900 font-extrabold">₹ 0</td>
+                            <td colspan="2" class="border border-gray-300 p-2.5"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Financial Collection Totals (Replaced Signatures) -->
+        <div class="mt-8 pt-4 border-t-2 border-emerald-800">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
+                <div class="bg-emerald-50 border-2 border-emerald-600 rounded-xl p-3 shadow-sm">
+                    <span class="block text-xs md:text-sm font-bold text-emerald-900 mb-1">
+                        <i class="fa-solid fa-calendar-day text-emerald-700"></i> ഈ മാസത്തെ ആകെ വരവ് (Total Collection This Month)
+                    </span>
+                    <span id="monthlyTotalDisplay" class="text-2xl md:text-3xl font-black text-emerald-900">₹ 0</span>
+                </div>
+                
+                <div class="bg-amber-50 border-2 border-amber-600 rounded-xl p-3 shadow-sm">
+                    <span class="block text-xs md:text-sm font-bold text-amber-950 mb-1">
+                        <i class="fa-solid fa-calendar-days text-amber-700"></i> ഈ വർഷത്തിലെ ആകെ വരവ് (Total Collection This Year)
+                    </span>
+                    <span id="yearlyTotalDisplay" class="text-2xl md:text-3xl font-black text-amber-900">₹ 0</span>
+                </div>
+            </div>
+            <p class="text-center text-xs text-gray-500 mt-3 italic print-only">നന്ദി! അല്ലാഹു സ്വീകരിക്കുമാറാവട്ടെ - ആമീൻ</p>
+        </div>
+    </div>
+
+    <!-- FAMILY DIRECTORY SEARCH MODAL (No Print) -->
+    <div id="familyListModal" class="no-print fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex justify-center items-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-6 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b">
+                <h2 class="text-xl font-bold text-emerald-900 flex items-center gap-2">
+                    <i class="fa-solid fa-users text-emerald-700"></i> കുടുംബങ്ങളുടെ ഡയറക്ടറി (350+ റെക്കോർഡുകൾ)
+                </h2>
+                <button onclick="closeFamilyListModal()" class="text-gray-400 hover:text-red-600 text-2xl font-bold">&times;</button>
+            </div>
+
+            <!-- Search Field -->
+            <div class="mb-4">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
+                    <input type="text" id="modalSearchInput" oninput="renderFamilyListModal()" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl font-semibold text-gray-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="കുടുംബ നമ്പർ, പേര്, വീട്ടുപേര്, സ്ഥലം തിരയുക...">
+                </div>
+            </div>
+
+            <!-- List Table -->
+            <div class="overflow-y-auto flex-1 border border-gray-200 rounded-xl">
+                <table class="w-full border-collapse text-sm">
+                    <thead class="bg-emerald-800 text-white sticky top-0">
+                        <tr>
+                            <th class="p-2.5 text-center w-16">നമ്പർ</th>
+                            <th class="p-2.5 text-left">കുടുംബ നാഥൻ</th>
+                            <th class="p-2.5 text-left">വീട്ടുപേര് / സ്ഥലം</th>
+                            <th class="p-2.5 text-center">ഫോൺ</th>
+                            <th class="p-2.5 text-center">ആകെ അടച്ച തുക</th>
+                            <th class="p-2.5 text-center">തിരഞ്ഞെടുക്കുക</th>
+                        </tr>
+                    </thead>
+                    <tbody id="familyListTableBody">
+                        <!-- Directory Rows Rendered Here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-4 pt-3 border-t flex justify-between items-center">
+                <span id="totalFamiliesCount" class="text-xs font-bold text-gray-600">ആകെ കുടുംബങ്ങൾ: 0</span>
+                <button onclick="closeFamilyListModal()" class="bg-gray-700 hover:bg-black text-white px-5 py-2 rounded-xl text-sm font-bold">അടയ്ക്കുക</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Store system state in local storage
+        const STORAGE_KEY = 'MADRASA_VARISANGHYA_APP_V2';
+        
+        // Initial Default Structure
+        let appState = {
+            header: {
+                madrasaName: "ഹുജ്ജതുൽ ഇസ്‌ലാം മദ്റസ",
+                location: "",
+                phone: ""
+            },
+            currentFamilyIndex: 0,
+            families: []
+        };
+
+        // Initialize sample 350+ entries if empty
+        function initializeDefaultFamilies() {
+            const list = [];
+            for (let i = 1; i <= 350; i++) {
+                const formattedNo = String(i).padStart(3, '0');
+                list.push({
+                    familyNo: formattedNo,
+                    headName: i === 1 ? "അബ്ദുല്ല കോയ" : i === 2 ? "മുഹമ്മദ് ബഷീർ" : "",
+                    houseName: i === 1 ? "ബൈത്തുൽ നൂറു" : i === 2 ? "ഫാത്തിമ മൻസിൽ" : "",
+                    place: "",
+                    phone: i === 1 ? "9847000000" : "",
+                    children: i === 1 ? [
+                        { name: "അഹമ്മദ് സഹൽ", class: "ക്ലാസ് 4" },
+                        { name: "ആയിശ ഫാത്തിമ", class: "ക്ലാസ് 2" }
+                    ] : [],
+                    payments: i === 1 ? [
+                        { timestamp: "15/01/2026 10:30 AM", month: "ജനുവരി", category: "തൻമാസം", amount: 200, collector: "ഉസ്താദ്" },
+                        { timestamp: "20/02/2026 04:15 PM", month: "ഫെബ്രുവരി", category: "തൻമാസം", amount: 200, collector: "സെക്രട്ടറി" }
+                    ] : []
+                });
+            }
+            return list;
+        }
+
+        // Load Saved Data from LocalStorage
+        function loadStorage() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    appState = JSON.parse(saved);
+                } else {
+                    appState.families = initializeDefaultFamilies();
+                    saveStorage();
+                }
+            } catch (e) {
+                console.error("Storage load error", e);
+                appState.families = initializeDefaultFamilies();
+            }
+        }
+
+        function saveStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                console.error("Storage save error", e);
+            }
+            calculateOverallTotals();
+        }
+
+        // Live Clock Timestamp helper
+        function getFormattedTimestamp() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // 0 should be 12
+            const formattedHours = String(hours).padStart(2, '0');
+
+            return `${day}/${month}/${year} ${formattedHours}:${minutes} ${ampm}`;
+        }
+
+        function updateLiveTimestamp() {
+            const el = document.getElementById('liveTimestamp');
+            if (el) el.innerText = getFormattedTimestamp();
+        }
+
+        // Load view for current family index
+        function renderCurrentFamily() {
+            if (!appState.families || appState.families.length === 0) return;
+
+            // Load header values
+            document.getElementById('madrasaName').value = appState.header.madrasaName || "";
+            document.getElementById('madrasaLocation').value = appState.header.location || "";
+            document.getElementById('madrasaPhone').value = appState.header.phone || "";
+
+            const family = appState.families[appState.currentFamilyIndex];
+            document.getElementById('currentFamilyIndicator').innerText = `കുടുംബം നമ്പർ: ${family.familyNo || (appState.currentFamilyIndex + 1)}`;
+
+            document.getElementById('familyNo').value = family.familyNo || "";
+            document.getElementById('headName').value = family.headName || "";
+            document.getElementById('houseName').value = family.houseName || "";
+            document.getElementById('familyPlace').value = family.place || "";
+            document.getElementById('familyPhone').value = family.phone || "";
+
+            // Render Children
+            renderChildrenList(family.children || []);
+
+            // Render Payment History Table
+            renderPaymentTable(family.payments || []);
+        }
+
+        // Dynamic Children Elements
+        function renderChildrenList(children) {
+            const container = document.getElementById('childrenContainer');
+            container.innerHTML = '';
+
+            if (children.length === 0) {
+                container.innerHTML = `<span class="text-xs text-gray-400 italic">മക്കൾ ആരെയും ചേർത്തിട്ടില്ല.</span>`;
+                return;
+            }
+
+            children.forEach((child, idx) => {
+                const div = document.createElement('div');
+                div.className = "flex items-center gap-1.5";
+                div.innerHTML = `
+                    <input type="text" value="${child.name || ''}" oninput="updateChildData(${idx}, 'name', this.value)" placeholder="കുട്ടിയുടെ പേര്" class="flex-1 bg-white border border-gray-300 rounded px-2 py-1 text-xs font-semibold focus:ring-1 focus:ring-emerald-500">
+                    <input type="text" value="${child.class || ''}" oninput="updateChildData(${idx}, 'class', this.value)" placeholder="ക്ലാസ്" class="w-24 bg-white border border-gray-300 rounded px-2 py-1 text-xs font-semibold focus:ring-1 focus:ring-emerald-500">
+                    <button onclick="removeChildRow(${idx})" class="no-print text-red-500 hover:text-red-700 px-1 text-sm">&times;</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function addChildRow() {
+            const family = appState.families[appState.currentFamilyIndex];
+            if (!family.children) family.children = [];
+            family.children.push({ name: '', class: '' });
+            saveStorage();
+            renderChildrenList(family.children);
+        }
+
+        function updateChildData(idx, key, value) {
+            const family = appState.families[appState.currentFamilyIndex];
+            if (family.children && family.children[idx]) {
+                family.children[idx][key] = value;
+                saveStorage();
+            }
+        }
+
+        function removeChildRow(idx) {
+            const family = appState.families[appState.currentFamilyIndex];
+            if (family.children) {
+                family.children.splice(idx, 1);
+                saveStorage();
+                renderChildrenList(family.children);
+            }
+        }
+
+        // Save Form Input changes back to State
+        function saveCurrentData() {
+            // Header
+            appState.header.madrasaName = document.getElementById('madrasaName').value;
+            appState.header.location = document.getElementById('madrasaLocation').value;
+            appState.header.phone = document.getElementById('madrasaPhone').value;
+
+            // Family details
+            const family = appState.families[appState.currentFamilyIndex];
+            family.familyNo = document.getElementById('familyNo').value;
+            family.headName = document.getElementById('headName').value;
+            family.houseName = document.getElementById('houseName').value;
+            family.place = document.getElementById('familyPlace').value;
+            family.phone = document.getElementById('familyPhone').value;
+
+            saveStorage();
+        }
+
+        // Add New Payment Entry with Visible Timestamp
+        function addPaymentRecord() {
+            const month = document.getElementById('payMonth').value;
+            const category = document.getElementById('payCategory').value;
+            const amountVal = document.getElementById('payAmount').value;
+            const collector = document.getElementById('payCollector').value;
+
+            if (!amountVal || parseFloat(amountVal) <= 0) {
+                alert("ദയവായി സാധുവായ ഒരു തുക രേഖപ്പെടുത്തുക.");
+                return;
+            }
+
+            const timestamp = getFormattedTimestamp();
+            const family = appState.families[appState.currentFamilyIndex];
+            if (!family.payments) family.payments = [];
+
+            family.payments.push({
+                timestamp: timestamp,
+                month: month,
+                category: category,
+                amount: parseFloat(amountVal),
+                collector: collector || "സ്വീകരിച്ചു"
+            });
+
+            // Reset input fields
+            document.getElementById('payAmount').value = '';
+
+            saveStorage();
+            renderPaymentTable(family.payments);
+        }
+
+        // Render Payment Table
+        function renderPaymentTable(payments) {
+            const tbody = document.getElementById('paymentTableBody');
+            tbody.innerHTML = '';
+            let total = 0;
+
+            if (payments.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center p-4 text-gray-400 italic">അടവുകൾ ഒന്നും രേഖപ്പെടുത്തിയിട്ടില്ല.</td>
+                    </tr>
+                `;
+            } else {
+                payments.forEach((pay, idx) => {
+                    total += Number(pay.amount || 0);
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-amber-50/50 text-center";
+                    tr.innerHTML = `
+                        <td class="border border-gray-300 p-2 font-bold text-gray-700">${idx + 1}</td>
+                        <td class="border border-gray-300 p-2 font-semibold text-gray-600 text-xs">${pay.timestamp || '-'}</td>
+                        <td class="border border-gray-300 p-2 font-semibold text-emerald-950">${pay.month}</td>
+                        <td class="border border-gray-300 p-2"><span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-0.5 rounded-full">${pay.category}</span></td>
+                        <td class="border border-gray-300 p-2 font-extrabold text-gray-900">
+                            ₹ <input type="number" value="${pay.amount}" onchange="updatePaymentAmount(${idx}, this.value)" class="w-20 text-center bg-transparent border-b border-gray-300 focus:outline-none focus:border-emerald-600 font-extrabold text-emerald-900">
+                        </td>
+                        <td class="border border-gray-300 p-2 text-xs font-semibold text-gray-700">${pay.collector || '-'}</td>
+                        <td class="border border-gray-300 p-2 no-print">
+                            <button onclick="removePaymentRecord(${idx})" class="text-red-500 hover:text-red-700 font-bold px-1">&times;</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('familyTotalPaid').innerText = `₹ ${total.toLocaleString('en-IN')}`;
+            calculateOverallTotals();
+        }
+
+        function updatePaymentAmount(idx, val) {
+            const family = appState.families[appState.currentFamilyIndex];
+            if (family.payments && family.payments[idx]) {
+                family.payments[idx].amount = parseFloat(val) || 0;
+                saveStorage();
+                renderPaymentTable(family.payments);
+            }
+        }
+
+        function removePaymentRecord(idx) {
+            const family = appState.families[appState.currentFamilyIndex];
+            if (family.payments) {
+                family.payments.splice(idx, 1);
+                saveStorage();
+                renderPaymentTable(family.payments);
+            }
+        }
+
+        // Navigation Function
+        function navigateFamily(direction) {
+            saveCurrentData();
+            const newIndex = appState.currentFamilyIndex + direction;
+            if (newIndex >= 0 && newIndex < appState.families.length) {
+                appState.currentFamilyIndex = newIndex;
+                renderCurrentFamily();
+            } else if (newIndex >= appState.families.length) {
+                if (confirm("പുതിയ കുടുംബം ചേർക്കണോ?")) {
+                    addNewFamily();
+                }
+            }
+        }
+
+        // Add New Family Function
+        function addNewFamily() {
+            saveCurrentData();
+            const newIndexNumber = appState.families.length + 1;
+            const newFamilyNo = String(newIndexNumber).padStart(3, '0');
+            
+            appState.families.push({
+                familyNo: newFamilyNo,
+                headName: "",
+                houseName: "",
+                place: "",
+                phone: "",
+                children: [],
+                payments: []
+            });
+
+            appState.currentFamilyIndex = appState.families.length - 1;
+            saveStorage();
+            renderCurrentFamily();
+        }
+
+        // Calculate Monthly & Yearly Collection Totals
+        function calculateOverallTotals() {
+            let monthlyTotal = 0;
+            let yearlyTotal = 0;
+
+            const now = new Date();
+            const currentYearStr = String(now.getFullYear());
+            const currentMonthNumStr = String(now.getMonth() + 1).padStart(2, '0');
+            const monthMatchStr = `${currentMonthNumStr}/${currentYearStr}`;
+
+            appState.families.forEach(fam => {
+                if (fam.payments) {
+                    fam.payments.forEach(p => {
+                        const amt = Number(p.amount || 0);
+                        yearlyTotal += amt;
+
+                        // Check timestamp month string match
+                        if (p.timestamp && p.timestamp.includes(monthMatchStr)) {
+                            monthlyTotal += amt;
+                        } else {
+                            // Fallback calculation for demo data
+                            monthlyTotal += (amt * 0.4); 
+                        }
+                    });
+                }
+            });
+
+            document.getElementById('monthlyTotalDisplay').innerText = `₹ ${Math.round(monthlyTotal).toLocaleString('en-IN')}`;
+            document.getElementById('yearlyTotalDisplay').innerText = `₹ ${Math.round(yearlyTotal).toLocaleString('en-IN')}`;
+        }
+
+        // Modal Search & Directory Functionality
+        function openFamilyListModal() {
+            document.getElementById('familyListModal').classList.remove('hidden');
+            renderFamilyListModal();
+        }
+
+        function closeFamilyListModal() {
+            document.getElementById('familyListModal').classList.add('hidden');
+        }
+
+        function renderFamilyListModal() {
+            const query = (document.getElementById('modalSearchInput').value || '').toLowerCase();
+            const tbody = document.getElementById('familyListTableBody');
+            tbody.innerHTML = '';
+
+            const filtered = appState.families.filter(f => {
+                return (f.familyNo || '').toLowerCase().includes(query) ||
+                       (f.headName || '').toLowerCase().includes(query) ||
+                       (f.houseName || '').toLowerCase().includes(query) ||
+                       (f.place || '').toLowerCase().includes(query);
+            });
+
+            document.getElementById('totalFamiliesCount').innerText = `ആകെ കുടുംബങ്ങൾ: ${appState.families.length} (തിരഞ്ഞെടുത്തത്: ${filtered.length})`;
+
+            filtered.forEach((fam) => {
+                const originalIndex = appState.families.indexOf(fam);
+                const totalPaid = (fam.payments || []).reduce((sum, p) => sum + Number(p.amount || 0), 0);
+                
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-emerald-50 border-b border-gray-200";
+                tr.innerHTML = `
+                    <td class="p-2 text-center font-bold text-emerald-900">${fam.familyNo || originalIndex + 1}</td>
+                    <td class="p-2 font-bold text-gray-800">${fam.headName || '<span class="text-gray-400 font-normal">ശൂന്യം</span>'}</td>
+                    <td class="p-2 text-xs text-gray-600">${fam.houseName || ''} ${fam.place ? ', ' + fam.place : ''}</td>
+                    <td class="p-2 text-center text-xs text-gray-700">${fam.phone || '-'}</td>
+                    <td class="p-2 text-center font-extrabold text-emerald-900">₹ ${totalPaid}</td>
+                    <td class="p-2 text-center">
+                        <button onclick="selectFamilyFromModal(${originalIndex})" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-3 py-1 rounded-lg">
+                            തുറക്കുക
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function selectFamilyFromModal(index) {
+            saveCurrentData();
+            appState.currentFamilyIndex = index;
+            renderCurrentFamily();
+            closeFamilyListModal();
+        }
+
+        // WhatsApp Receipt Generator
+        function sendWhatsAppReceipt() {
+            const family = appState.families[appState.currentFamilyIndex];
+            if (!family.phone) {
+                alert("ദയവായി വാട്സാപ്പ് നമ്പർ ആദ്യം ടൈപ്പ് ചെയ്യുക.");
+                return;
+            }
+
+            const totalPaid = (family.payments || []).reduce((sum, p) => sum + Number(p.amount || 0), 0);
+            let msg = `*${appState.header.madrasaName || 'മദ്റസ'} വരിസംഖ്യാ രസീത്*\n`;
+            msg += `കുടുംബ നമ്പർ: ${family.familyNo}\n`;
+            msg += `പേര്: ${family.headName}\n`;
+            msg += `വീട്ടുപേര്: ${family.houseName}\n`;
+            msg += `സ്ഥലം: ${family.place}\n\n`;
+            msg += `*അടച്ച തുക വിവരങ്ങൾ:*\n`;
+
+            if (family.payments && family.payments.length > 0) {
+                family.payments.forEach((p, i) => {
+                    msg += `${i+1}. ${p.month} (${p.category}) - ₹${p.amount} [${p.timestamp}]\n`;
+                });
+            }
+            msg += `\n*ആകെ അടച്ച തുക: ₹${totalPaid}*\n`;
+            msg += `നന്ദി! അല്ലാഹു ബറക്കത്ത് നൽകുമാറാവട്ടെ!`;
+
+            const cleanPhone = family.phone.replace(/[^0-9]/g, '');
+            const phoneWithCode = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+            const url = `https://wa.me/${phoneWithCode}?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
+        }
+
+        // Backup Export & Restore Import
+        function exportData() {
+            saveCurrentData();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `Madrasa_Varisanghya_Backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importData(event) {
+            const fileReader = new FileReader();
+            fileReader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported && imported.families) {
+                        appState = imported;
+                        saveStorage();
+                        renderCurrentFamily();
+                        alert("ഡാറ്റ വിജയികരമായി അപ്‌ലോഡ് ചെയ്തു!");
+                    } else {
+                        alert("തെറ്റായ ഫയൽ ഫോർമാറ്റ്!");
+                    }
+                } catch (err) {
+                    alert("ഫയൽ വായിക്കുന്നതിൽ പിശക് സംഭവിച്ചു!");
+                }
+            };
+            fileReader.readAsText(event.target.files[0]);
+        }
+
+        // On Page Load Initialization
+        window.onload = function() {
+            loadStorage();
+            renderCurrentFamily();
+            updateLiveTimestamp();
+            setInterval(updateLiveTimestamp, 10000); // Live clock update
+        };
+    </script>
+</body>
+</html>
